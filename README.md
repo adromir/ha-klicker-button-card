@@ -17,7 +17,7 @@ Designed specifically for triggering actions, scripts, automations, door openers
 - 🎯 **Tactile Physics Engine**: Features authentic button depression (`translateY(3px)` + `scale(0.93)`), compression shadows, radial glow ripples, and springy overshoot return (`cubic-bezier(0.175, 0.885, 0.32, 1.275)`).
 - ⏱️ **Configurable Bounce Duration**: Tune how long the button stays depressed before rebounding (default: `350ms`).
 - ⚡ **Universal Action Execution**: Call any Home Assistant script, trigger an automation, toggle an entity, or fire arbitrary service calls (`perform-action` / `call-service`).
-- 💎 **Authentic Glassmorphism & Theme Harmony**: Features translucent frosted glass styling (`backdrop-filter: blur(20px)`), subtle top specular highlights, and seamless adaptation to both light and dark themes (including Vision Glass).
+- 🏛️ **100% Home Assistant Native Design**: Strictly compliant with the official Home Assistant design system (`--ha-card-background`, `--ha-card-border-radius`, `--primary-text-color`). Zero forced glassmorphism; seamlessly matches default themes, Mushroom, and custom themes automatically.
 - 🎛️ **4 Versatile Layouts**:
   - `default`: Vertical squircle card with icon on top and label below.
   - `horizontal`: Slim horizontal row with icon on left and text on right.
@@ -117,7 +117,6 @@ tap_action:
 | `layout` | string | `default` | Layout mode: `default`, `horizontal`, `icon`, `chip`. |
 | `size` | string | `normal` | Button size: `small`, `normal`, `large`. |
 | `bounce_duration` | number | `350` | Duration in milliseconds before the button springs back. |
-| `glass` | boolean | `true` | Enables frosted glassmorphism styling. |
 | `haptic` | boolean | `true` | Enables mobile touch vibration feedback. |
 | `subtext` | string | `''` | Secondary sub-label below the title. |
 | `tap_action` | object | `{ action: 'none' }` | Standard Home Assistant action configuration. |
@@ -134,3 +133,4 @@ Website: [https://github.com/adromir](https://github.com/adromir)
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+

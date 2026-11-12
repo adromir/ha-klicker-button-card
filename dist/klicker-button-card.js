@@ -1,11 +1,11 @@
 /**
  * 🔘 Klicker Button Card for Home Assistant
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Adromir (https://github.com/adromir)
  * License: MIT
  *
- * A modern, tactile momentary action push-button card with visual click
- * bounce-back animation for Home Assistant Lovelace dashboards.
+ * A tactile momentary action push-button card compliant with the native
+ * Home Assistant design language, featuring springy click bounce-back physics.
  */
 
 (function () {
@@ -43,7 +43,6 @@
       this.attachShadow({ mode: 'open' });
       this._config = {};
       this._hass = null;
-      this._isPressed = false;
       this._resetTimer = null;
     }
 
@@ -57,8 +56,7 @@
           target: {}
         },
         bounce_duration: 350,
-        layout: 'default',
-        color: '#0284c7'
+        layout: 'default'
       };
     }
 
@@ -74,13 +72,13 @@
         name: config.name || '',
         icon: config.icon || '',
         icon_color: config.icon_color || '',
-        color: config.color || config.active_color || '#0284c7',
+        color: config.color || config.active_color || '',
         bounce_duration: config.bounce_duration !== undefined ? Number(config.bounce_duration) : 350,
         layout: config.layout || 'default', // 'default' | 'horizontal' | 'icon' | 'chip'
         size: config.size || 'normal', // 'small' | 'normal' | 'large'
-        glass: config.glass !== false,
         haptic: config.haptic !== false,
         entity: config.entity || '',
+        subtext: config.subtext || '',
         tap_action: config.tap_action || (config.service || config.perform_action ? {
           action: config.perform_action ? 'perform-action' : 'call-service',
           service: config.service,
@@ -141,22 +139,22 @@
     }
 
     _triggerBounce() {
-      const button = this.shadowRoot.querySelector('.klicker-button');
-      if (!button) return;
+      const card = this.shadowRoot.querySelector('ha-card');
+      if (!card) return;
 
       if (this._resetTimer) {
         clearTimeout(this._resetTimer);
       }
 
-      button.classList.add('is-active');
+      card.classList.add('is-active');
 
       const duration = Math.max(150, this._config.bounce_duration || 350);
       this._resetTimer = setTimeout(() => {
-        button.classList.remove('is-active');
-        button.classList.add('is-rebounding');
+        card.classList.remove('is-active');
+        card.classList.add('is-rebounding');
         setTimeout(() => {
-          button.classList.remove('is-rebounding');
-        }, 300);
+          card.classList.remove('is-rebounding');
+        }, 280);
       }, duration);
     }
 
@@ -221,7 +219,7 @@
     _render() {
       if (!this.shadowRoot) return;
 
-      const { name, icon, icon_color, color, layout, size, glass, subtext } = this._config;
+      const { name, icon, icon_color, color, layout, size, subtext } = this._config;
 
       // Icon determination
       const displayIcon = icon || (this._config.entity ? '' : 'mdi:gesture-tap-button');
@@ -231,189 +229,158 @@
         <style>
           :host {
             display: block;
-            --klicker-accent: ${color || 'var(--primary-color, #0284c7)'};
-            --klicker-icon-color: ${icon_color || color || 'var(--primary-color, #0284c7)'};
+            --klicker-accent: ${color ? color : 'var(--primary-color, #03a9f4)'};
+            --klicker-icon-color: ${icon_color ? icon_color : (color ? color : 'var(--state-icon-color, var(--primary-color, #03a9f4))')};
             box-sizing: border-box;
           }
 
-          /* Container Card */
+          /* Home Assistant Standard Card Styling */
           ha-card {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            overflow: visible;
-          }
-
-          /* Tactile Klicker Button */
-          .klicker-button {
             position: relative;
             user-select: none;
             -webkit-user-select: none;
             cursor: pointer;
             box-sizing: border-box;
             outline: none;
-            border: none;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: inherit;
-            color: var(--primary-text-color, #0f172a);
-            text-decoration: none;
-            border-radius: 20px;
             overflow: hidden;
-            background: ${glass ? 'rgba(255, 255, 255, 0.08)' : 'var(--card-background-color, #ffffff)'};
-            backdrop-filter: ${glass ? 'blur(20px) saturate(180%)' : 'none'};
-            -webkit-backdrop-filter: ${glass ? 'blur(20px) saturate(180%)' : 'none'};
-            border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.16));
-            box-shadow:
-              inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.35),
-              0 6px 18px rgba(0, 0, 0, 0.08);
+
+            /* Native Home Assistant Theme Variables */
+            background: var(--ha-card-background, var(--card-background-color, #ffffff));
+            border-radius: var(--ha-card-border-radius, 12px);
+            border-width: var(--ha-card-border-width, 1px);
+            border-style: solid;
+            border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+            box-shadow: var(--ha-card-box-shadow, none);
+            color: var(--primary-text-color, #212121);
+
             transition:
               transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-              box-shadow 0.25s ease,
-              background 0.25s ease,
-              border-color 0.25s ease;
-          }
-
-          /* Specular light bar top */
-          .klicker-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 10%;
-            right: 10%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-            pointer-events: none;
+              box-shadow 0.2s ease,
+              border-color 0.2s ease,
+              background-color 0.2s ease;
           }
 
           /* Hover State */
-          .klicker-button:hover {
-            transform: translateY(-2px) scale(1.01);
-            background: ${glass ? 'rgba(255, 255, 255, 0.13)' : 'var(--card-background-color, #ffffff)'};
-            border-color: rgba(255, 255, 255, 0.32);
-            box-shadow:
-              inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.45),
-              0 10px 24px rgba(0, 0, 0, 0.12),
-              0 0 12px rgba(2, 132, 199, 0.15);
+          ha-card:hover {
+            border-color: var(--klicker-accent);
+            transform: translateY(-1px);
           }
 
           /* Pressed / Active State (Click Bounce Physics) */
-          .klicker-button.is-active {
-            transform: translateY(3px) scale(0.93) !important;
-            background: ${glass ? 'rgba(255, 255, 255, 0.22)' : 'rgba(0, 0, 0, 0.05)'} !important;
+          ha-card.is-active {
+            transform: translateY(2px) scale(0.95) !important;
             border-color: var(--klicker-accent) !important;
-            box-shadow:
-              inset 0 4px 10px rgba(0, 0, 0, 0.35),
-              0 2px 6px rgba(0, 0, 0, 0.1),
-              0 0 25px var(--klicker-accent) !important;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.16), 0 0 10px rgba(0, 0, 0, 0.05) !important;
             transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.08s ease !important;
           }
 
           /* Rebounding spring overshoot */
-          .klicker-button.is-rebounding {
-            transform: scale(1.025);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          ha-card.is-rebounding {
+            transform: scale(1.02);
+            transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           }
 
           /* Layout Variants */
           /* Default: Vertical stacked (Icon top, Label bottom) */
           .layout-default {
             flex-direction: column;
-            gap: 10px;
-            padding: 20px 16px;
-            min-height: 110px;
+            gap: 8px;
+            padding: 16px 14px;
+            min-height: 96px;
           }
 
-          /* Horizontal: Icon left, Text right */
+          /* Horizontal: Icon left, Text right (standard HA tile format) */
           .layout-horizontal {
             flex-direction: row;
-            gap: 14px;
-            padding: 14px 20px;
+            gap: 12px;
+            padding: 12px 16px;
             justify-content: flex-start;
-            min-height: 64px;
+            min-height: 56px;
           }
 
-          /* Icon Only: Compact rounded square / circle */
+          /* Icon Only: Compact square button */
           .layout-icon {
-            padding: 16px;
+            padding: 12px;
             aspect-ratio: 1;
             width: fit-content;
-            min-width: 64px;
-            min-height: 64px;
+            min-width: 56px;
+            min-height: 56px;
             margin: 0 auto;
           }
 
-          /* Chip / Pill */
+          /* Chip / Pill: Compact pill format */
           .layout-chip {
             flex-direction: row;
             gap: 8px;
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 9999px;
             width: fit-content;
-            min-height: 38px;
+            min-height: 36px;
           }
 
-          /* Sizes */
+          /* Size modifiers */
           .size-small {
-            padding: 8px 12px;
-            min-height: 48px;
+            padding: 8px 10px;
+            min-height: 44px;
           }
           .size-small .klicker-icon-box {
             width: 32px;
             height: 32px;
           }
           .size-small .klicker-name {
-            font-size: 13px;
+            font-size: 12.5px;
           }
 
           .size-large {
-            padding: 24px 20px;
-            min-height: 130px;
+            padding: 20px 18px;
+            min-height: 116px;
           }
           .size-large .klicker-icon-box {
-            width: 58px;
-            height: 58px;
+            width: 52px;
+            height: 52px;
           }
           .size-large .klicker-name {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 15.5px;
+            font-weight: 600;
           }
 
-          /* Icon Wrapper */
+          /* Icon Wrapper (Native HA Tile / Bubble circle style) */
           .klicker-icon-box {
             position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.22);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
             color: var(--klicker-icon-color);
-            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease, background 0.2s ease;
+            flex-shrink: 0;
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease, background-color 0.2s ease;
           }
 
-          .klicker-button:hover .klicker-icon-box {
-            transform: scale(1.08) rotate(2deg);
-            background: rgba(255, 255, 255, 0.2);
+          ha-card:hover .klicker-icon-box {
+            transform: scale(1.06);
           }
 
-          .klicker-button.is-active .klicker-icon-box {
-            transform: scale(0.85) rotate(-6deg);
+          ha-card.is-active .klicker-icon-box {
+            transform: scale(0.90);
             background: var(--klicker-accent);
-            color: #ffffff !important;
+            color: var(--text-primary-color, #ffffff) !important;
           }
 
           ha-icon, ha-state-icon {
-            --mdc-icon-size: 24px;
-            width: 24px;
-            height: 24px;
+            --mdc-icon-size: 22px;
+            width: 22px;
+            height: 22px;
           }
 
-          /* Text Elements */
+          /* Text Elements (Native HA typography) */
           .klicker-text-col {
             display: flex;
             flex-direction: column;
@@ -423,10 +390,10 @@
           }
 
           .klicker-name {
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 1.2;
-            color: var(--primary-text-color, #0f172a);
+            font-weight: 500;
+            font-size: 13.5px;
+            line-height: 1.25;
+            color: var(--primary-text-color, #212121);
             text-align: ${layout === 'horizontal' ? 'left' : 'center'};
             white-space: nowrap;
             overflow: hidden;
@@ -437,72 +404,46 @@
           .klicker-subtext {
             font-size: 11.5px;
             line-height: 1.3;
-            color: var(--secondary-text-color, #64748b);
+            color: var(--secondary-text-color, #727272);
             margin-top: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 100%;
           }
-
-          /* Ripple Flash Wave */
-          .ripple-wave {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: radial-gradient(circle, var(--klicker-accent) 0%, transparent 70%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.35s ease;
-          }
-          .klicker-button.is-active .ripple-wave {
-            opacity: 0.28;
-          }
-
-          /* Vision Glass Theme / Dark Mode Adaptations */
-          @media (prefers-color-scheme: dark) {
-            .klicker-button {
-              background: rgba(15, 23, 42, 0.65);
-              border-color: rgba(255, 255, 255, 0.12);
-              color: #f8fafc;
-            }
-            .klicker-name {
-              color: #f8fafc;
-            }
-            .klicker-subtext {
-              color: #94a3b8;
-            }
-          }
         </style>
 
-        <ha-card>
-          <button
-            class="klicker-button layout-${layout} size-${size}"
-            id="klickerButton"
-            type="button"
-            aria-label="${displayName}"
-          >
-            <div class="ripple-wave"></div>
+        <ha-card
+          class="layout-${layout} size-${size}"
+          id="klickerButton"
+          role="button"
+          tabindex="0"
+          aria-label="${displayName}"
+        >
+          ${displayIcon ? `
+            <div class="klicker-icon-box">
+              ${this._config.entity ? `<ha-state-icon .hass="${this._hass}" .stateObj="${this._hass?.states[this._config.entity]}"></ha-state-icon>` : `<ha-icon icon="${displayIcon}"></ha-icon>`}
+            </div>
+          ` : ''}
 
-            ${displayIcon ? `
-              <div class="klicker-icon-box">
-                ${this._config.entity ? `<ha-state-icon .hass="${this._hass}" .stateObj="${this._hass?.states[this._config.entity]}"></ha-state-icon>` : `<ha-icon icon="${displayIcon}"></ha-icon>`}
-              </div>
-            ` : ''}
-
-            ${layout !== 'icon' && (displayName || subtext || this._config.entity) ? `
-              <div class="klicker-text-col">
-                <span class="klicker-name">${displayName}</span>
-                ${subtext || this._config.entity ? `<span class="klicker-subtext">${subtext || ''}</span>` : ''}
-              </div>
-            ` : ''}
-          </button>
+          ${layout !== 'icon' && (displayName || subtext || this._config.entity) ? `
+            <div class="klicker-text-col">
+              <span class="klicker-name">${displayName}</span>
+              ${subtext || this._config.entity ? `<span class="klicker-subtext">${subtext || ''}</span>` : ''}
+            </div>
+          ` : ''}
         </ha-card>
       `;
 
-      const btn = this.shadowRoot.getElementById('klickerButton');
-      if (btn) {
-        btn.addEventListener('click', (e) => this._handleTap(e));
+      const card = this.shadowRoot.getElementById('klickerButton');
+      if (card) {
+        card.addEventListener('click', (e) => this._handleTap(e));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this._handleTap(e);
+          }
+        });
       }
 
       this._updateEntityState();
@@ -563,15 +504,15 @@
           }
           label {
             font-size: 12.5px;
-            font-weight: 600;
-            color: var(--secondary-text-color, #64748b);
+            font-weight: 500;
+            color: var(--secondary-text-color, #727272);
           }
           input, select {
             padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.15));
+            border-radius: 4px;
+            border: 1px solid var(--divider-color, #e0e0e0);
             background: var(--card-background-color, #ffffff);
-            color: var(--primary-text-color, #0f172a);
+            color: var(--primary-text-color, #212121);
             font-family: inherit;
             font-size: 13.5px;
           }
@@ -593,8 +534,8 @@
             <input type="text" .value="${this._config.icon || ''}" .configValue="${'icon'}" placeholder="mdi:gesture-tap-button" />
           </div>
           <div class="form-row">
-            <label>Akzentfarbe (HEX / CSS)</label>
-            <input type="text" .value="${this._config.color || '#0284c7'}" .configValue="${'color'}" placeholder="#0284c7" />
+            <label>Akzentfarbe (optional)</label>
+            <input type="text" .value="${this._config.color || ''}" .configValue="${'color'}" placeholder="z. B. #03a9f4 oder var(--primary-color)" />
           </div>
         </div>
 
@@ -603,7 +544,7 @@
             <label>Layout</label>
             <select .configValue="${'layout'}">
               <option value="default" ${this._config.layout === 'default' ? 'selected' : ''}>Standard (Vertikal)</option>
-              <option value="horizontal" ${this._config.layout === 'horizontal' ? 'selected' : ''}>Horizontal (Zeile)</option>
+              <option value="horizontal" ${this._config.layout === 'horizontal' ? 'selected' : ''}>Horizontal (Kachel / Zeile)</option>
               <option value="icon" ${this._config.layout === 'icon' ? 'selected' : ''}>Nur Icon (Quadratisch)</option>
               <option value="chip" ${this._config.layout === 'chip' ? 'selected' : ''}>Kompakter Chip (Pille)</option>
             </select>
@@ -639,15 +580,15 @@
   window.customCards.push({
     type: 'klicker-button-card',
     name: 'Klicker Button Card',
-    description: 'Taktiler Momentary-Aktions-Taster mit kinetischem Klick-Rückprall (Bounce-Back-Animation).',
+    description: 'Taktiler Momentary-Aktions-Taster im nativen Home Assistant Design mit kinetischem Klick-Rückprall.',
     preview: true,
     documentationURL: 'https://github.com/adromir/ha-klicker-button-card'
   });
 
   console.info(
-    '%c 🔘 KLICKER-BUTTON-CARD %c v1.0.0 %c',
-    'background:#0284c7;color:#fff;font-weight:700;padding:2px 6px;border-radius:4px 0 0 4px;',
-    'background:#38bdf8;color:#0f172a;font-weight:700;padding:2px 6px;border-radius:0 4px 4px 0;',
+    '%c 🔘 KLICKER-BUTTON-CARD %c v1.0.1 %c',
+    'background:#03a9f4;color:#fff;font-weight:700;padding:2px 6px;border-radius:4px 0 0 4px;',
+    'background:#e0e0e0;color:#212121;font-weight:700;padding:2px 6px;border-radius:0 4px 4px 0;',
     'background:transparent;'
   );
 })();
