@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name to release (e.g. v1.0.1)'
+        required: false
+
+jobs:
+  release:
+    name: Validate Card & Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Card Assets & HACS metadata
+        run: |
+          if [ ! -f "klicker-button-card.js" ]; then
+            echo "Error: klicker-button-card.js not found!"
+            exit 1
+          fi
+          if [ ! -f "hacs.json" ]; then
+            echo "Error: hacs.json not found!"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          name: Klicker Button Card ${{ github.event.inputs.tag_name || github.ref_name }}
+          files: |
+            klicker-button-card.js
+          generate_release_notes: true
+          draft: false
+          prerelease: false
